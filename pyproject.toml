@@ -1,0 +1,19 @@
+[project]
+name = "financial_predictor"
+version = "0.1.0"
+description = "Modular financial prediction system"
+authors = [
+    {name = "Antigravity", email = "antigravity@gemini.google.com"},
+]
+dependencies = [
+    "pandas>=2.0.0",
+    "numpy>=1.24.0",
+    "yfinance>=0.2.0",
+    "scikit-learn>=1.3.0",
+    "pytest>=7.0.0",
+]
+requires-python = ">=3.10"
+
+[build-system]
+requires = ["flit_core >=3.2,<4"]
+build-backend = "flit_core.buildapi"
