@@ -72,10 +72,15 @@ def create_equity_curve(portfolio: pd.DataFrame, title: str = "Strategy Equity C
     )
     return fig
 
-def create_feature_importance_chart(importance: pd.DataFrame, top_n: int = 15):
+def create_feature_importance_chart(importance, top_n: int = 15):
     """
     Creates a horizontal bar chart for feature importance.
+    Accepts pd.Series (index=Feature, value=Score) or pd.DataFrame.
     """
+    if isinstance(importance, pd.Series):
+        importance = importance.reset_index()
+        importance.columns = ['Feature', 'Importance']
+    
     df_plot = importance.head(top_n).sort_values(by='Importance', ascending=True)
     
     fig = go.Figure(go.Bar(

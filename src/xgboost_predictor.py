@@ -10,18 +10,21 @@ class XGBoostPredictor(Predictor):
     Predictor implementation using XGBoost.
     """
     
-    def __init__(self, params: dict = None):
-        if params is None:
-            # Default parameters
-            self.params = {
-                'objective': 'reg:squarederror',
-                'n_estimators': 100,
-                'learning_rate': 0.1,
-                'max_depth': 5,
-                'eval_metric': 'rmse'
-            }
-        else:
-            self.params = params
+    def __init__(self, **kwargs):
+        """
+        Initialize with XGBoost parameters.
+        """
+        self.params = {
+            'objective': 'reg:squarederror',
+            'n_estimators': 100,
+            'learning_rate': 0.1,
+            'max_depth': 5,
+            'eval_metric': 'rmse'
+        }
+        
+        # Override defaults with provided kwargs
+        if kwargs:
+            self.params.update(kwargs)
             
         self.model = xgb.XGBRegressor(**self.params)
         

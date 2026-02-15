@@ -33,12 +33,17 @@ def test_create_equity_curve():
     assert isinstance(fig, go.Figure)
     assert fig.data[0].y[0] == 10000
 
-def test_create_feature_importance():
-    importance = pd.DataFrame({
-        'Feature': ['A', 'B'],
-        'Importance': [0.6, 0.4]
+def test_create_feature_importance_chart():
+    # Test with DataFrame (old way)
+    df = pd.DataFrame({
+        'Feature': ['RSI', 'MACD', 'SMA'],
+        'Importance': [0.5, 0.3, 0.2]
     })
-    
-    fig = create_feature_importance_chart(importance)
+    fig = create_feature_importance_chart(df)
     assert isinstance(fig, go.Figure)
-    assert len(fig.data[0].x) == 2
+    
+    # Test with Series (new way / XGBoost output)
+    s = pd.Series([0.5, 0.3, 0.2], index=['RSI', 'MACD', 'SMA'])
+    fig_series = create_feature_importance_chart(s)
+    assert isinstance(fig_series, go.Figure)
+    assert len(fig_series.data[0].x) == 3
