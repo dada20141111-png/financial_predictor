@@ -13,6 +13,10 @@ if %errorlevel% neq 0 (
     exit /b
 )
 
+echo [1.5/2] Checking NLP resources...
+python -m textblob.download_corpora
+
+
 echo.
 echo [2/2] Launching Application...
 echo.

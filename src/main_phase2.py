@@ -1,6 +1,11 @@
 import argparse
 import pandas as pd
 import numpy as np
+import sys
+import os
+# Add project root to path
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
 from datetime import datetime, timedelta
 
 from src.data_provider import YahooFinanceProvider
@@ -134,14 +139,40 @@ def run_pipeline(symbol: str, train: bool = True, model_type: str = 'xgb', args=
         print("step 4.5: Analyzing Market Sentiment...")
         try:
             from src.sentiment import SentimentAnalyzer
+            from src.market_memory import MarketMemory # New Import
+            
             # Use base symbol name for better news search (e.g. "BTC" instead of "BTC-USD")
             search_term = symbol.split('-')[0]
             sentiment_analyzer = SentimentAnalyzer(search_term)
             sentiment_score = sentiment_analyzer.analyze_sentiment()
             mood = sentiment_analyzer.get_market_mood(sentiment_score)
             print(f"  Current Sentiment for {search_term}: {sentiment_score:.4f} ({mood})")
+            
+            # --- Auto-Learning: Update Market Memory ---
+            print("  Checking for significant market events...")
+            top_event = sentiment_analyzer.extract_top_event()
+            if top_event:
+                mm = MarketMemory()
+                # Check for duplicates today to avoid spamming
+                today_str = datetime.now().strftime('%Y-%m-%d')
+                existing_today = [e for e in mm.get_events(today_str, today_str) if e['description'] == top_event['description']]
+                
+                if not existing_today:
+                    mm.add_event(
+                        date=top_event['date'],
+                        description=top_event['description'],
+                        category=top_event['category'],
+                        sentiment=top_event['sentiment'],
+                        impact=top_event['impact']
+                    )
+                    print(f"  [MEMORY UPDATED] Added event: {top_event['description']}")
+                else:
+                    print("  Event already recorded today.")
+            else:
+                print("  No significant events to record.")
+                
         except Exception as e:
-            print(f"  Warning: Sentiment analysis failed: {e}")
+            print(f"  Warning: Sentiment/Memory update failed: {e}")
 
         # Evaluate
         preds = predictor.predict(X_test)

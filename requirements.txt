@@ -7,3 +7,5 @@ xgboost
 yfinance
 ccxt
 python-dotenv
+feedparser
+textblob

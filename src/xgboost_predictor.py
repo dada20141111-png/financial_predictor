@@ -30,33 +30,70 @@ class XGBoostPredictor(Predictor):
         
     def train(self, X: pd.DataFrame, y: pd.Series) -> None:
         """
-        Train the XGBoost model.
+        Train the XGBoost Regressor.
         """
         self.model.fit(X, y)
+
+    def train_classifier(self, X: pd.DataFrame, y: pd.Series) -> None:
+        """
+        Train a separate XGBoost Classifier for direction (Rise/Fall).
+        """
+        # Ensure we have a classifier model instance
+        if not hasattr(self, 'classifier'):
+            self.classifier = xgb.XGBClassifier(
+                n_estimators=100, 
+                learning_rate=0.1, 
+                max_depth=5, 
+                eval_metric='logloss',
+                use_label_encoder=False
+            )
         
+        # y should be binary (1 for Rise, 0 for Fall)
+        self.classifier.fit(X, y)
+
+    def predict_proba(self, X: pd.DataFrame) -> pd.Series:
+        """
+        Make probability predictions (for Class 1: Rise).
+        """
+        if not hasattr(self, 'classifier'):
+            raise ValueError("Classifier not trained yet!")
+            
+        # predict_proba returns [prob_0, prob_1]
+        probs = self.classifier.predict_proba(X)[:, 1]
+        return pd.Series(probs, index=X.index)
+
     def predict(self, X: pd.DataFrame) -> pd.Series:
         """
-        Make predictions.
+        Make regression predictions.
         """
         predictions = self.model.predict(X)
         return pd.Series(predictions, index=X.index)
         
     def save(self, path: str) -> None:
         """
-        Save model to file.
+        Save model to file. Saves both regressor and classifier if exists.
         """
-        self.model.save_model(path)
+        self.model.save_model(path + ".reg")
+        if hasattr(self, 'classifier'):
+            self.classifier.save_model(path + ".cls")
         
     def load(self, path: str) -> None:
         """
         Load model from file.
         """
         self.model = xgb.XGBRegressor()
-        self.model.load_model(path)
+        self.model.load_model(path + ".reg")
+        
+        # Try loading classifier
+        cls_path = path + ".cls"
+        import os
+        if os.path.exists(cls_path):
+            self.classifier = xgb.XGBClassifier()
+            self.classifier.load_model(cls_path)
         
     def get_feature_importance(self) -> pd.Series:
         """
-        Returns feature importance as a Series.
+        Returns feature importance as a Series (from Regressor).
         """
         return pd.Series(
             self.model.feature_importances_, 

@@ -144,9 +144,14 @@ class OKXExecutor(ExecutionEngine):
     3. 'live': Real Trading (Risk).
     """
     
-    def __init__(self):
+    def __init__(self, mode: str = None):
         from src.config import TRADING_MODE, API_KEY, SECRET_KEY, PASSPHRASE
-        self.mode = TRADING_MODE
+        # If mode provided (e.g. by Dashboard), use it. Else use config.
+        self.mode = mode if mode else TRADING_MODE
+        
+        # Compatibility: Dashboard uses 'paper', Executor uses 'mock'
+        if self.mode == 'paper':
+            self.mode = 'mock'
         
         print(f"Initializing Executor in [{self.mode.upper()}] mode...")
         
